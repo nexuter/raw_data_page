@@ -1,0 +1,870 @@
+<title>Rutgers Business Research Databases</title>
+
+<style>
+  :root {
+    --ground: #fbfafa;
+    --surface: #ffffff;
+    --ink: #1b1518;
+    --ink-soft: #4a4045;
+    --muted: #6f6367;
+    --rule: #e4dde0;
+    --rule-soft: #efeaec;
+    --scarlet: #cc0033;
+    --scarlet-ink: #a30029;
+    --scarlet-wash: #fdeff2;
+    --chip: #f3eff0;
+    --focus: #cc0033;
+
+    /* Matches raw.rutgers.edu: no webfont, system UI stack throughout. */
+    --sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #161315;
+      --surface: #1f1a1d;
+      --ink: #f0eaec;
+      --ink-soft: #cbc1c5;
+      --muted: #a69ba0;
+      --rule: #332c30;
+      --rule-soft: #262023;
+      --scarlet: #ff5c7a;
+      --scarlet-ink: #ff879c;
+      --scarlet-wash: #2e1a20;
+      --chip: #272125;
+      --focus: #ff5c7a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #161315;
+    --surface: #1f1a1d;
+    --ink: #f0eaec;
+    --ink-soft: #cbc1c5;
+    --muted: #a69ba0;
+    --rule: #332c30;
+    --rule-soft: #262023;
+    --scarlet: #ff5c7a;
+    --scarlet-ink: #ff879c;
+    --scarlet-wash: #2e1a20;
+    --chip: #272125;
+    --focus: #ff5c7a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--scarlet-ink); }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .shell {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 0 28px 120px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 56px 0 26px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h1 {
+    font-size: clamp(32px, 5vw, 44px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* ---------- controls ---------- */
+
+  .controls {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--ground);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    padding: 14px 0;
+  }
+
+  .search {
+    position: relative;
+    flex: 1 1 280px;
+    display: flex;
+    align-items: center;
+    max-width: 460px;
+  }
+
+  .search input {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 9px 40px 9px 12px;
+  }
+
+  .search input::placeholder { color: var(--muted); }
+
+  .search input:focus {
+    border-color: var(--scarlet);
+    outline: none;
+  }
+
+  .slash-hint {
+    position: absolute;
+    right: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1px 6px;
+    pointer-events: none;
+  }
+
+  .result-count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    margin: 0 0 0 auto;
+  }
+
+  /* ---------- body grid ---------- */
+
+  .stacks {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 0 30px;
+    align-items: start;
+  }
+
+  .rail {
+    position: sticky;
+    top: 78px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-top: 42px;
+  }
+
+  .rail a,
+  .rail span {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-align: center;
+    padding: 2px 0;
+    border-radius: 2px;
+    text-decoration: none;
+  }
+
+  .rail a { color: var(--ink-soft); }
+
+  .rail a:hover {
+    color: var(--scarlet-ink);
+    background: var(--scarlet-wash);
+  }
+
+  .rail span { color: var(--rule); }
+
+  /* ---------- groups + entries ---------- */
+
+  .group { scroll-margin-top: 84px; }
+
+  .group-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 32px 0 8px;
+  }
+
+  .group-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    margin: 0;
+    color: var(--scarlet);
+  }
+
+  .group-head hr {
+    flex: 1;
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 0;
+  }
+
+  .group-head .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 168px;
+    gap: 4px 28px;
+    padding: 18px 0;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .entry:first-of-type { border-top: 0; }
+
+  .entry-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.011em;
+    margin: 0;
+  }
+
+  .entry-name a {
+    color: var(--ink);
+    text-decoration: none;
+    background-image: linear-gradient(var(--scarlet), var(--scarlet));
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+  }
+
+  .entry-name a:hover { color: var(--scarlet-ink); }
+
+  .entry-name .unlinked { color: var(--ink-soft); }
+
+  .entry-summary {
+    grid-column: 1;
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+    max-width: 64ch;
+  }
+
+  .entry-meta {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    padding-top: 2px;
+  }
+
+  .access {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 3px;
+    color: var(--scarlet-ink);
+    background: var(--scarlet-wash);
+    white-space: nowrap;
+  }
+
+  .contact {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .contact a { color: var(--muted); text-decoration-color: var(--rule); }
+  .contact a:hover { color: var(--scarlet-ink); }
+  .contact .who { display: block; color: var(--ink-soft); }
+
+  .empty {
+    padding: 60px 0;
+    font-size: 17px;
+    color: var(--muted);
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 720px) {
+    .shell { padding: 0 18px 80px; }
+    .stacks { grid-template-columns: minmax(0, 1fr); }
+    .rail { display: none; }
+    .entry { grid-template-columns: minmax(0, 1fr); }
+    .entry-meta {
+      grid-column: 1;
+      grid-row: auto;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      padding-top: 8px;
+    }
+    .contact .who { display: inline; }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <h1>Research Databases</h1>
+  </header>
+
+  <div class="controls">
+    <label class="search">
+      <input id="q" type="search" placeholder="Search titles and descriptions" aria-label="Search databases">
+      <span class="slash-hint">/</span>
+    </label>
+    <p class="result-count" id="count"></p>
+  </div>
+
+  <div class="stacks">
+    <nav class="rail" id="rail" aria-label="Jump to letter"></nav>
+    <main id="list"></main>
+  </div>
+
+  <footer>Updated on Sept. 2, 2026.</footer>
+</div>
+
+<script>
+  const DB = [
+ {
+  "name": "Accounting Research Manager",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.answerconnect.cch.com",
+  "summary": "A searchable comprehensive database of accounting and auditing information, including standards and regulations.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/accounting_resource_mgr",
+  "byRequest": false,
+  "letter": "A"
+ },
+ {
+  "name": "Business Source Premier",
+  "url": "https://research.ebsco.com/c/nx7rpm/?db=buh",
+  "summary": "Covers business and management topics, including accounting, banking, economics, finance, international trade, marketing, and public administration.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/bsp",
+  "byRequest": false,
+  "letter": "B"
+ },
+ {
+  "name": "Business, Economic and Labour History",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.amscholar.amdigital.co.uk/BusEconLab",
+  "summary": "Digitized primary sources from Britain and America covering 19th and 20th century topics, including papers of major economists and documentation of Keynesian economics in Britain.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/business-economic-and-labour-history",
+  "byRequest": false,
+  "letter": "B"
+ },
+ {
+  "name": "Conference Board Research Collection",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.conference-board.org/publications",
+  "summary": "Analytical reports on topics and issues in business management and U.S. and global economics.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/conference_board",
+  "byRequest": false,
+  "letter": "C"
+ },
+ {
+  "name": "Data Axle Reference Solutions",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.referenceusa.com/",
+  "summary": "Detailed information on millions of U.S. businesses and employers.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/refusa",
+  "byRequest": false,
+  "letter": "D"
+ },
+ {
+  "name": "The Economist Historical Archive",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://link.gale.com/apps/ECON?u=new67449",
+  "summary": "Digitized collection of every issue of The Economist published from 1843 to 2015.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/economist-historical",
+  "byRequest": false,
+  "letter": "E"
+ },
+ {
+  "name": "The Economist Intelligence Unit",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://viewpoint.eiu.com",
+  "summary": "Data and analysis related to the commercial and financial operations of 68 countries.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/eiu",
+  "byRequest": false,
+  "letter": "E"
+ },
+ {
+  "name": "Factiva",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://global.factiva.com/en/sess/login.asp?xsid=S002dVqZsVo2tmnNdmnMDUsOT6uODYq5DByMU38ODJ9RcyqUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUEA",
+  "summary": "Major national and regional newspapers, magazines, and other publications, plus company/market information.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/factiva",
+  "byRequest": false,
+  "letter": "F"
+ },
+ {
+  "name": "Finaeon (Global Financial Data)",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://app.finaeon.com",
+  "summary": "Collection of historical and current financial and economic data covering more than 150 different countries.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/global_financial_dat",
+  "byRequest": false,
+  "letter": "F"
+ },
+ {
+  "name": "Glassdoor",
+  "url": "",
+  "summary": "Glassdoor Companies dataset",
+  "contact": "Won No",
+  "contactUrl": "mailto:wgno@business.rutgers.edu",
+  "byRequest": true,
+  "letter": "G"
+ },
+ {
+  "name": "IBISWorld",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://my.ibisworld.com",
+  "summary": "U.S. industry and procurement reports providing data on rates of growth, major competitors, and market trends.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/ibisworld",
+  "byRequest": false,
+  "letter": "I"
+ },
+ {
+  "name": "IMF eLibrary",
+  "url": "https://www.elibrary.imf.org/",
+  "summary": "(Open Access) International Monetary Fund periodicals, books, working papers and studies, as well as data and statistical tools.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/elibrary_imf",
+  "byRequest": false,
+  "letter": "I"
+ },
+ {
+  "name": "Market Research and American Business Reports, 1935-1965",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.marketresearch.amdigital.co.uk",
+  "summary": "Digitized reports of Ernest Dichter, whose market research firm was employed by major American companies across a variety of industries.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/amdigital-market-research",
+  "byRequest": false,
+  "letter": "M"
+ },
+ {
+  "name": "MarketLine",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://advantage.marketline.com/",
+  "summary": "In-depth business analysis of companies, industries, and countries around the world.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/marketline",
+  "byRequest": false,
+  "letter": "M"
+ },
+ {
+  "name": "MarketScope Advisor",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://advisor.marketscope.com/",
+  "summary": "Investment database produced by CFRA, an independent financial intelligence service.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/marketscope-advisor",
+  "byRequest": false,
+  "letter": "M"
+ },
+ {
+  "name": "Mergent Archives",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://mergentarchives.com/search.php",
+  "summary": "Digitized archive of Corporate and Municipal Mergent (formerly Moody's) Manuals dating back to 1909.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/mergent_archives",
+  "byRequest": false,
+  "letter": "M"
+ },
+ {
+  "name": "Mergent Market Atlas",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://marketatlas.mergent.com",
+  "summary": "Information about 50,000 global, active public companies, as well as industry, country, sustainability, and macroeconomic data.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/mergent-market-atlas",
+  "byRequest": false,
+  "letter": "M"
+ },
+ {
+  "name": "Mintel",
+  "url": "https://shibboleth.mintel.com/Shibboleth.sso/Login?target=https%3A%2F%2Fshibboleth.mintel.com%2Fshibboleth%2Flogin%2F%3Fnext%3Dhttps%253A%252F%252Fclients.mintel.com%252Fcontent&entityID=urn%3Amace%3Aincommon%3Arutgers.edu",
+  "summary": "Product and industry market research reports covering consumer products in U.S. and international marketplaces.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/mintel",
+  "byRequest": false,
+  "letter": "M"
+ },
+ {
+  "name": "O'Reilly",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.oreilly.com/library-access/?email=^u",
+  "summary": "Technology and business books, audiobooks, videos, and more from over 200 publishers.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.oreilly.com/library-access/?email=^u",
+  "byRequest": false,
+  "letter": "O"
+ },
+ {
+  "name": "OECD Publications",
+  "url": "https://www.oecd.org/en/publications.html",
+  "summary": "(Open Access) Books, reports, working papers, and data from the Organisation for Economic Co-operation and Development (OECD).",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/sourceoecd",
+  "byRequest": false,
+  "letter": "O"
+ },
+ {
+  "name": "Open Knowledge Repository (World Bank)",
+  "url": "https://openknowledge.worldbank.org/",
+  "summary": "(Open Access) Repository for research and publications produced by the World Bank.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/okr",
+  "byRequest": false,
+  "letter": "O"
+ },
+ {
+  "name": "PolicyMap",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.policymap.com/newmaps/e/rutgers",
+  "summary": "Online data and mapping application that gives access to indicators related to U.S. housing, crime, mortgages, health, jobs, demographics, and education.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/policymap",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "PrivCo",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://system.privco.com/signin",
+  "summary": "Business and financial research on non-publicly traded companies, including family-owned, private equity-owned, venture-backed, and international unlisted companies.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/privco",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "ProcurementIQ",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://my.ibisworld.com",
+  "summary": "U.S. industry and procurement reports providing data on rates of growth, major competitors, and market trends.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/ibisworld",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "ProQuest Central Premium",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.proquest.com/centralpremium/index?accountid=13626",
+  "summary": "Multidisciplinary database that contains academic and popular journal publications across all major subject areas.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/proquest-central-premium",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "ProQuest Historical Newspapers - The Wall Street Journal",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.proquest.com/hnpwallstreetjournal?accountid=13626",
+  "summary": "Digitized collection of every issue of the Wall Street Journal from 1889 to 12 years prior to the current year.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/wsj",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "ProQuest One Academic",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.proquest.com/pq1academicnew?accountid=13626",
+  "summary": "A giant platform that allows you to search within ProQuest Central academic databases, ProQuest Dissertations & Theses Global, Academic Video Online, and 200,000+ ebooks in the ProQuest Academic Complete collection.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/proquest-one-academic",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "ProQuest One Business",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.proquest.com/pq1business?accountid=13626",
+  "summary": "Scholarly and trade journals; company, industry, and country reports; case studies; news sources; videos; and more.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/proquest-one-business",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "ProQuest Statistical Insight",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.proquest.com/statistical?accountid=13626",
+  "summary": "Statistics from public and private sector sources worldwide in a wide variety of subject areas.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/proquest-statistical-insight",
+  "byRequest": false,
+  "letter": "P"
+ },
+ {
+  "name": "Regional Business News",
+  "url": "https://research.ebsco.com/c/nx7rpm/?db=bwh",
+  "summary": "Regional business publications, including magazines, newspapers, radio and television news transcripts, and newswires.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/rbn",
+  "byRequest": false,
+  "letter": "R"
+ },
+ {
+  "name": "Sage Business",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://sk.sagepub.com/business",
+  "summary": "Business cases, theories, and practical applications.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/sage-business",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "Sage Data",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://data.sagepub.com/",
+  "summary": "Datasets from a variety of authoritative sources on agriculture, commerce, education, health, labor, transportation, and more.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/data-planet",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "Sage Research Methods",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://methods.sagepub.com",
+  "summary": "Resources designed to help researchers choose a research method, collect and analyze data, and present their findings.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/sage-research-methods",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "Sage Skills",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://sk.sagepub.com/skills",
+  "summary": "Business skills and student success learning modules.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/sage-skills",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "Sage Video",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://sk.sagepub.com/video",
+  "summary": "Streaming videos for business, social sciences, nursing, psychology, and other disciplines.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/sage-video",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "Scopus",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www.scopus.com/",
+  "summary": "Abstracts and citations of peer-reviewed literature covering the fields of science, technology, medicine, social sciences, arts, and humanities.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/scopus",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "SeekEdgar",
+  "url": "https://www.seekedgar.com/",
+  "summary": "Search SEC and Indian company filings across full documents, tables, footnotes, MD&A, SOX 404 reports, audit reports, and CD&A — with no stop words limitation.",
+  "contact": "",
+  "contactUrl": "",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "SMA: Sports Market Analytics",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://SportsMarketAnalytics.com",
+  "summary": "Market research and industry news in the area of sports business.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/sbrnet",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "Statista",
+  "url": "https://proxy.libraries.rutgers.edu/overdrive/statista",
+  "summary": "Collection of statistical data from a variety of sources covering topics in business, education, finance, media, politics, society, and technology.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/statista",
+  "byRequest": false,
+  "letter": "S"
+ },
+ {
+  "name": "UNIDO Statistics Data Portal",
+  "url": "https://stat.unido.org/",
+  "summary": "(Open Access) Global data on the manufacturing sector from 1963 to the present.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/indstat-4",
+  "byRequest": false,
+  "letter": "U"
+ },
+ {
+  "name": "Value Line",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://investors.valueline.com/Users/Account/LogOn?returnUrl=https://research.valueline.com/secure/dashboard",
+  "summary": "A comprehensive source of information and advice on companies, industries, markets, and economies.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/value_line_research",
+  "byRequest": false,
+  "letter": "V"
+ },
+ {
+  "name": "Value Line Historical Reports",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://www3.valueline.com/secure/historicalvlis/index.aspx",
+  "summary": "Historical investment information and advice dating on approximately 1,700 large cap stocks.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/value_line_historical",
+  "byRequest": false,
+  "letter": "V"
+ },
+ {
+  "name": "Vault",
+  "url": "https://rutgers.firsthand.co/",
+  "summary": "An online reference of hundreds of employers and available jobs.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/online_career_library",
+  "byRequest": false,
+  "letter": "V"
+ },
+ {
+  "name": "VitalLaw",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://my.vitallaw.com",
+  "summary": "A comprehensive law & taxation database containing official government publications, interpretive and analytical material, practice tools, and current tax news.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/cch_tax",
+  "byRequest": false,
+  "letter": "V"
+ },
+ {
+  "name": "The Wall Street Journal",
+  "url": "https://partner.wsj.com/partner/rutgersuniversity",
+  "summary": "Current digital edition of the Wall Street journal, a national daily newspaper publishing news, commentary, and analysis with an emphasis on business and financial news.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/wsj-current",
+  "byRequest": false,
+  "letter": "W"
+ },
+ {
+  "name": "Weiss Ratings: Mutual Funds",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://greyhouse.weissratings.com",
+  "summary": "Mutual funds ratings produced by the independent financial ratings agency Weiss Ratings.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/weiss-ratings-mutual-funds",
+  "byRequest": false,
+  "letter": "W"
+ },
+ {
+  "name": "Westlaw Campus Research",
+  "url": "https://login.proxy.libraries.rutgers.edu/login?url=https://next.westlaw.com/Search/Home.html?rs=IWLN1.0&vr=3.0&sp=000345271-2100&forcecdn=false",
+  "summary": "A collection of thousands of law, news, and business publications.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/westlaw",
+  "byRequest": false,
+  "letter": "W"
+ },
+ {
+  "name": "World Bank Open Knowledge Repository (OKR)",
+  "url": "https://openknowledge.worldbank.org/",
+  "summary": "(Open Access) Repository for research and publications produced by the World Bank.",
+  "contact": "Rutgers Library",
+  "contactUrl": "https://www.libraries.rutgers.edu/databases/okr",
+  "byRequest": false,
+  "letter": "W"
+ },
+ {
+  "name": "WRDS",
+  "url": "https://wrds-www.wharton.upenn.edu/",
+  "summary": "WRDS is a platform aggregating 600+ databases from 60+ data vendors, incorporating over 550 terabytes of data.",
+  "contact": "Ivan Brick",
+  "contactUrl": "mailto:ibrick@business.rutgers.edu",
+  "byRequest": true,
+  "letter": "W"
+ }
+];
+
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  const listEl = document.getElementById("list");
+  const railEl = document.getElementById("rail");
+  const countEl = document.getElementById("count");
+  const queryEl = document.getElementById("q");
+
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  function entryHTML(d) {
+    const title = d.url
+      ? '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.name) + "</a>"
+      : '<span class="unlinked">' + esc(d.name) + "</span>";
+    const who = d.contactUrl
+      ? '<a href="' + esc(d.contactUrl) + '" target="_blank" rel="noopener">' + esc(d.contact) + "</a>"
+      : esc(d.contact);
+    const tag = d.byRequest ? '<span class="access">By request</span>' : "";
+    const contact = d.contact ? '<p class="contact">Ask <span class="who">' + who + "</span></p>" : "";
+    const meta = tag || contact ? '<div class="entry-meta">' + tag + contact + "</div>" : "";
+    return '<article class="entry">' +
+      '<h3 class="entry-name">' + title + "</h3>" +
+      '<p class="entry-summary">' + esc(d.summary) + "</p>" +
+      meta +
+    "</article>";
+  }
+
+  function render() {
+    const q = queryEl.value.trim().toLowerCase();
+    const hits = DB.filter(d =>
+      !q || (d.name + " " + d.summary + " " + d.contact).toLowerCase().includes(q)
+    );
+
+    const groups = new Map();
+    for (const d of hits) {
+      if (!groups.has(d.letter)) groups.set(d.letter, []);
+      groups.get(d.letter).push(d);
+    }
+
+    listEl.innerHTML = hits.length
+      ? [...groups].map(pair =>
+          '<section class="group" id="letter-' + pair[0] + '">' +
+            '<div class="group-head"><h2>' + pair[0] + "</h2><hr>" +
+            '<span class="n">' + pair[1].length + "</span></div>" +
+            pair[1].map(entryHTML).join("") +
+          "</section>"
+        ).join("")
+      : '<p class="empty">No database matches that search.</p>';
+
+    railEl.innerHTML = LETTERS.map(l =>
+      groups.has(l)
+        ? '<a href="#letter-' + l + '">' + l + "</a>"
+        : '<span aria-hidden="true">' + l + "</span>"
+    ).join("");
+
+    countEl.textContent = hits.length + " of " + DB.length;
+  }
+
+  queryEl.addEventListener("input", render);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && document.activeElement !== queryEl) {
+      e.preventDefault();
+      queryEl.focus();
+    }
+  });
+
+  render();
+</script>
